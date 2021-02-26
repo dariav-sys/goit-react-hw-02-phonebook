@@ -1,50 +1,69 @@
 import React, { Component } from 'react';
-import Section from './section/Section.js';
-import Statistics from "./statistics/Statistics.js";
-import FeedbackOptions from "./feedbackOptions/FeedbackOptions.js";
 
+import ContactForm from './components/contactForm';
+import Filter from './components/filter';
+import ContactList from './components/contactList';
 
 class App extends Component {
   state = {
-  good: 0,
-  neutral: 0,
-  bad: 0
-  }
+    contacts: [
+      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+    ],
+    filter: '',
+  };
 
-  leaveFeedback = (event) => {
-    const feedbackValue = event.target.name;
+  addContact = contact => {
+    const contactExist = this.state.contacts.find(
+      el => el.name === contact.name,
+    );
+    if (contactExist) {
+      alert('Contact already exists');
+      return;
+    }
+    this.setState(prevState => ({
+      contacts: [...prevState.contacts, contact],
+    }));
+  };
+
+  filterBy = e => {
+    this.setState({ filter: e.target.value });
+  };
+
+  filterContacts = () => {
+    const { contacts, filter } = this.state;
+    const normalized = filter.toLowerCase();
+
+    return contacts.filter(contact =>
+      contact.name.toLowerCase().includes(normalized),
+    );
+  };
+
+  deleteContact = id => {
     this.setState(prevState => {
-      return {
-        [feedbackValue]: prevState[feedbackValue] + 1,
-      }
-    })
-  }
-
-  countTotalFeedback(){
-    const { good, neutral, bad } = this.state;
-    return good + bad + neutral;
-  }
-
-  countPositiveFeedbackPercentage(){
-    return Math.floor(this.state.good / this.countTotalFeedback() * 100);
-  }
+      const index = prevState.contacts.findIndex(item => item.id === id);
+      const contacts = [
+        ...prevState.contacts.slice(0, index),
+        ...prevState.contacts.slice(index + 1),
+      ];
+      return { contacts };
+    });
+  };
 
   render() {
-    const options = Object.keys(this.state);
-    const { good, neutral, bad } = this.state;
     return (
-      <>
-        <Section title="Please provide your feedback :)" />
-        <FeedbackOptions options={options} onLeaveFeedback={ this.leaveFeedback}/>
-        <Statistics
-          good={good}
-          neutral={neutral}
-          bad={bad}
-          total={this.countTotalFeedback()}
-          positiveFeedbackPercent={this.countPositiveFeedbackPercentage() }/>
-        
-      </>
-    )
+      <div className="container">
+        <h1>Phonebook</h1>
+        <ContactForm onSubmit={this.addContact} />
+        <Filter value={this.state.filter} onChange={this.filterBy} />
+        <ContactList
+          onFilter={this.filterContacts()}
+          onDelete={this.deleteContact}
+        />
+      </div>
+    );
   }
 }
 
